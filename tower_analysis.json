@@ -1,0 +1,480 @@
+[
+  {
+    "source": "data100.cpk",
+    "file": "r5ac.dat",
+    "size": 136648,
+    "sub_files": [],
+    "direct_analysis": {
+      "label": "r5ac.dat",
+      "size": 136648,
+      "magic": "d53e1105",
+      "magic_str": "\u00d5>\u0011\u0005",
+      "file_refs": [],
+      "strings": [
+        "Binormal0",
+        "Color0",
+        "Normal",
+        "Position",
+        "Tangent0",
+        "TexCoord0",
+        "TexCoord1",
+        "g_1BitMask",
+        "g_AlbedoColor_X",
+        "g_AlbedoColor_Y",
+        "g_AlbedoColor_Z",
+        "g_AmbientLightIntensity",
+        "g_Anisotropic",
+        "g_Decal",
+        "g_DetailNormalTile_X",
+        "g_DetailNormalTile_Y",
+        "g_Glossiness",
+        "g_IsSwatchRender",
+        "g_LighIntensity0",
+        "g_LighIntensity1",
+        "g_LighIntensity2",
+        "g_LightColor0_X",
+        "g_LightColor0_Y",
+        "g_LightColor0_Z",
+        "g_LightColor1_X",
+        "g_LightColor1_Y",
+        "g_LightColor1_Z",
+        "g_LightColor2_X",
+        "g_LightColor2_Y",
+        "g_LightColor2_Z"
+      ],
+      "possible_coords": [
+        [
+          -21.3,
+          -21.3,
+          3.2
+        ],
+        [
+          -28723.1,
+          14.3,
+          -2121.7
+        ],
+        [
+          2.2,
+          -2.2,
+          -2.2
+        ],
+        [
+          -23904.0,
+          -21.3,
+          -21.3
+        ],
+        [
+          -21.3,
+          -218.8,
+          -218.8
+        ],
+        [
+          -2.3,
+          2.3,
+          4.1
+        ],
+        [
+          -13.7,
+          -21.3,
+          -21.3
+        ],
+        [
+          -2.2,
+          -2.2,
+          2.4
+        ],
+        [
+          -11.2,
+          43.1,
+          1024.5
+        ],
+        [
+          -21.3,
+          -21.3,
+          -21.3
+        ],
+        [
+          -21.3,
+          -21.3,
+          -218.8
+        ],
+        [
+          -2.2,
+          -2.2,
+          -2.4
+        ],
+        [
+          5.1,
+          -28.0,
+          52.6
+        ],
+        [
+          -11.7,
+          -21.3,
+          -21.3
+        ],
+        [
+          3.2,
+          -3.9,
+          0.9
+        ],
+        [
+          -3.2,
+          -3.2,
+          -3.2
+        ],
+        [
+          -32.6,
+          2.5,
+          11719.0
+        ],
+        [
+          9.1,
+          -44.1,
+          164.3
+        ],
+        [
+          -16.5,
+          -8.3,
+          1145.1
+        ],
+        [
+          -202.8,
+          -4.7,
+          215.7
+        ]
+      ]
+    }
+  },
+  {
+    "source": "data100.cpk",
+    "file": "r5a8.dat",
+    "size": 44508,
+    "sub_files": [],
+    "direct_analysis": {
+      "label": "r5a8.dat",
+      "size": 44508,
+      "magic": "5a00675f",
+      "magic_str": "Z\u0000g_",
+      "file_refs": [],
+      "strings": [
+        "g_LightIntensity",
+        "g_Metallic",
+        "g_NormalReverse",
+        "g_ObjWetStrength",
+        "g_OffShadowCast",
+        "g_ReflectionIntensity",
+        "g_Tile_X",
+        "g_Tile_Y",
+        "g_UV2Use",
+        "g_UseDetailNormalMap",
+        "g_UseEnvWet",
+        "g_UseLightMap",
+        "g_UseNormalMap",
+        "g_UseObjWet",
+        "g_UseOcclusionMap",
+        "g_WetConvergenceGlossiness",
+        "g_WetMagAlbedo",
+        "g_bAlbedoOverWrite",
+        "g_bGlossinessOverWrite",
+        "g_bMetalicOverWrite",
+        "CRILAYLA",
+        " Z$ d,",
+        "0G#c'`",
+        "`Uy-`Uy",
+        "IcG\"0|",
+        "$M^W5X",
+        "`McU 1 ",
+        "IcG$0|",
+        "4p#kDJ",
+        "9c$Lty"
+      ],
+      "possible_coords": [
+        [
+          -21.3,
+          -21.3,
+          -21.3
+        ],
+        [
+          6529.6,
+          -127.1,
+          2.3
+        ],
+        [
+          -2.2,
+          -2.2,
+          -3.4
+        ],
+        [
+          2.8,
+          11.4,
+          5.0
+        ],
+        [
+          -21.3,
+          -218.8,
+          -2220.0
+        ],
+        [
+          -2.2,
+          -2.2,
+          -2.2
+        ],
+        [
+          -2.2,
+          -3.4,
+          -2.2
+        ],
+        [
+          -2.3,
+          2.3,
+          4.1
+        ],
+        [
+          6.4,
+          -2.3,
+          2.3
+        ],
+        [
+          -13.7,
+          -21.3,
+          -21.3
+        ]
+      ]
+    }
+  },
+  {
+    "source": "data100.cpk",
+    "file": "r5a9.dat",
+    "size": 117444,
+    "sub_files": [],
+    "direct_analysis": {
+      "label": "r5a9.dat",
+      "size": 117444,
+      "magic": "97ca10ff",
+      "magic_str": "\u0097\u00ca\u0010\u00ff",
+      "file_refs": [],
+      "strings": [
+        "CRILAYLA@",
+        "L JU,D6",
+        "A\"\"S=Z",
+        "_]3?q6",
+        "{ae!y(",
+        "mQIXf|,",
+        "Fw$6`5`^%",
+        "65G%#n*",
+        "mjV]qd",
+        "a,n%Qd",
+        "(W1b\"B",
+        "hcM\\+?/",
+        "&F?rYZ",
+        "1s>XAbFI",
+        "8z5l[$K",
+        "Ptji`W-K",
+        "R#U2nM@F\\T-",
+        "{>\\ei'M",
+        "Grl\"EeX",
+        "VqzP@s",
+        "1@S%nV",
+        "K5U*R$",
+        "-7Fn$#",
+        "A\"T$M8",
+        "jQ11@<",
+        "*=iHTQV",
+        "n.4lQ7",
+        "blH!mA",
+        "ET;EUN",
+        "f.[ F>"
+      ],
+      "possible_coords": [
+        [
+          160.6,
+          3.9,
+          168.5
+        ],
+        [
+          245.5,
+          -616.7,
+          -36.8
+        ],
+        [
+          -6.0,
+          -1588.9,
+          -36.9
+        ],
+        [
+          3169.7,
+          0.9,
+          1561.7
+        ],
+        [
+          -23.6,
+          -7.2,
+          22368.6
+        ],
+        [
+          -2410.2,
+          232.6,
+          -177.8
+        ],
+        [
+          -1620.1,
+          1420.9,
+          -6.1
+        ],
+        [
+          -3.2,
+          -3.2,
+          -3.2
+        ],
+        [
+          -6225.8,
+          -2.2,
+          -2.2
+        ],
+        [
+          -5.6,
+          -7.6,
+          -30.3
+        ],
+        [
+          -2.2,
+          -2.2,
+          -3.4
+        ],
+        [
+          -12988.2,
+          82.8,
+          15.8
+        ],
+        [
+          -2.2,
+          -2.2,
+          -2.2
+        ],
+        [
+          -2.2,
+          -3.4,
+          -2.2
+        ],
+        [
+          -16224.8,
+          -240.9,
+          46.2
+        ],
+        [
+          -28.9,
+          73.7,
+          300.3
+        ],
+        [
+          -11.2,
+          2.2,
+          72.5
+        ],
+        [
+          -40.7,
+          94.2,
+          11.5
+        ],
+        [
+          -168.6,
+          -23.6,
+          -7.2
+        ],
+        [
+          -1147.2,
+          3169.7,
+          0.9
+        ]
+      ]
+    }
+  },
+  {
+    "source": "data100.cpk",
+    "file": "r5aa.dat",
+    "size": 84240,
+    "sub_files": [],
+    "direct_analysis": {
+      "label": "r5aa.dat",
+      "size": 84240,
+      "magic": "97ca10ff",
+      "magic_str": "\u0097\u00ca\u0010\u00ff",
+      "file_refs": [],
+      "strings": [
+        "r5aa_Bgm.sar",
+        "r5aa.bnk",
+        "01.gad",
+        "r5aa_hap.pak",
+        "7f.gad",
+        "00.gad",
+        "r5aa_hap.z",
+        "GAArea.bxm",
+        "r5aa_Se.sar",
+        "^Field",
+        "IsEnable",
+        "ShapeGroup",
+        "CheckPosType",
+        "ParentObjId",
+        "ParentUniqueId",
+        "ParentPartsNo",
+        "InEvent",
+        "BGM_Area_Colosseum_Desert_In",
+        "OutEvent",
+        "SyncState",
+        "ShapeType",
+        "WorkType",
+        "Origin",
+        "-1173.14 -40.8366 -412.36 1.5",
+        "0 0 0 1",
+        "Height",
+        "24.0802",
+        "DepthTop",
+        "DepthBottom",
+        "-10.2958 0 46.5437 1"
+      ],
+      "possible_coords": [
+        [
+          170.3,
+          -447.8,
+          -5.5
+        ],
+        [
+          -2.1,
+          -2048.1,
+          -2.1
+        ],
+        [
+          -8.4,
+          -2048.1,
+          -8.4
+        ],
+        [
+          -8.4,
+          -128.0,
+          -8.4
+        ],
+        [
+          -2.1,
+          -128.0,
+          -2.1
+        ],
+        [
+          8384.0,
+          -128.0,
+          8384.0
+        ],
+        [
+          0.5,
+          32.0,
+          8199.2
+        ],
+        [
+          8384.0,
+          -2048.1,
+          8384.0
+        ]
+      ]
+    }
+  }
+]
