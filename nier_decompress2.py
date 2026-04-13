@@ -93,13 +93,16 @@ def _decompress_bitstream(cmp_data, dec_size):
     src_idx = len(cmp_data)-1
     bit_pool= 0
     bits_left=0
+    underflow = False
 
     def read_bits(n):
-        nonlocal src_idx, bit_pool, bits_left
+        nonlocal src_idx, bit_pool, bits_left, underflow
         out=0; rem=n
         while rem>0:
             if bits_left==0:
-                if src_idx<0: return 0
+                if src_idx<0:
+                    underflow = True
+                    return 0
                 bit_pool=cmp_data[src_idx]; src_idx-=1; bits_left=8
             take=min(bits_left,rem)
             out=(out<<take)|((bit_pool>>(bits_left-take))&((1<<take)-1))
@@ -109,14 +112,20 @@ def _decompress_bitstream(cmp_data, dec_size):
     dst=dec_size-1
     while dst>=0:
         if read_bits(1)==1:
+            if underflow:
+                return None
             output[dst]=read_bits(8); dst-=1
         else:
             ref_offset=read_bits(13)+3
             lc=read_bits(4)
+            if underflow:
+                return None
             if lc==15:
                 length=0
                 while True:
                     extra=read_bits(8); length+=extra
+                    if underflow:
+                        return None
                     if extra!=255: break
                 length+=18
             else:
@@ -124,7 +133,9 @@ def _decompress_bitstream(cmp_data, dec_size):
             for _ in range(length):
                 if dst>=0:
                     src=dst+ref_offset
-                    output[dst]=output[src] if src<dec_size else 0
+                    if src >= dec_size:
+                        return None
+                    output[dst]=output[src]
                     dst-=1
     return bytes(output)
 
