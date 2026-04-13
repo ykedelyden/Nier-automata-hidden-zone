@@ -148,7 +148,7 @@ def crilayla_decompress(data, dec_size_hint=None):
             if dec>0 and cmp>0 and cmp<=pos:
                 cmp_data=data[pos-cmp:pos]
                 result=_decompress_bitstream(bytes(cmp_data),dec)
-                if result and any(b!=0 for b in result[:32]):
+                if result is not None and len(result) == dec:
                     return result, f'header-at-end (sig@{pos}, dec={dec}, cmp={cmp})'
         except: pass
 
@@ -160,7 +160,7 @@ def crilayla_decompress(data, dec_size_hint=None):
             if dec>0 and cmp>0 and 16+cmp<=len(data):
                 cmp_data=data[16:16+cmp]
                 result=_decompress_bitstream(bytes(cmp_data),dec)
-                if result and any(b!=0 for b in result[:32]):
+                if result is not None and len(result) == dec:
                     return result, f'header-at-start (dec={dec}, cmp={cmp})'
         except: pass
 
@@ -168,7 +168,7 @@ def crilayla_decompress(data, dec_size_hint=None):
     if dec_size_hint and dec_size_hint>0 and dec_size_hint!=len(data):
         try:
             result=_decompress_bitstream(bytes(data),dec_size_hint)
-            if result and any(b!=0 for b in result[:32]):
+            if result is not None and len(result) == dec_size_hint:
                 return result, f'raw-bitstream (dec_size={dec_size_hint})'
         except: pass
 
@@ -176,7 +176,7 @@ def crilayla_decompress(data, dec_size_hint=None):
     for skip in (0,4,8):
         try:
             result=zlib.decompress(data[skip:])
-            if result and any(b!=0 for b in result[:32]):
+            if result is not None:
                 return result, f'zlib (skip={skip})'
         except: pass
 
