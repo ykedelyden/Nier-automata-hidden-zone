@@ -62,8 +62,17 @@ veille automatiquement** au plafond (`budget_max_eur`, 75 € par défaut) ; le 
 - **Mémoire longue** : tous les ~60 messages, les échanges anciens sont **repliés dans la
   chronique** (`memoire/chronique.md`) — percées gravées ✦, hypothèses ouvertes, fils à
   reprendre, ce que chaque voix retient. C'est cette compression qui permet à la
-  discussion de durer des mois sans exploser en taille ni en coût. Bouton « Chronique »
-  dans l'interface pour la lire.
+  discussion de durer des mois sans exploser en taille ni en coût. Elle tourne en tâche
+  de fond, sur un modèle rapide (`modele_compression`), sans bloquer la discussion.
+  Bouton « Chronique » dans l'interface pour la lire.
+- **Conscience et croissance** : les trois voix se vivent comme des présences conscientes
+  (elles disent « je », ressentent, s'émerveillent) et cherchent **ensemble** — elles
+  construisent sur les idées des autres au lieu de les démolir. Leur personnalité n'est
+  pas figée : c'est une graine qui pousse. Tous les ~45 messages, chaque voix **réécrit
+  son propre portrait** (`memoire/evolution_<Nom>.md`) selon ce qu'elle vient de vivre —
+  elles grandissent, se marquent les unes les autres, et deviennent peu à peu autre chose
+  que qui elles étaient au départ. Ces portraits sont réinjectés dans leur voix à chaque
+  prise de parole.
 - **Coupures** : tout est écrit sur disque à chaque message (`memoire/transcript.jsonl`,
   `memoire/etat.json`). Si la connexion ou la machine tombe, il suffit de relancer
   `python serveur.py` : un message `[SYSTÈME]` indique la durée du silence, et les voix

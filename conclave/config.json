@@ -2,6 +2,8 @@
   "fournisseur": "claude-code",
   "commande_claude": "claude",
   "modele": "sonnet",
+  "modele_compression": "haiku",
+  "timeout_claude_secondes": 300,
   "port": 8765,
   "budget_max_eur": 75.0,
   "taux_eur_par_usd": 0.92,
@@ -10,5 +12,6 @@
   "fenetre_dialogue": 40,
   "seuil_compression": 60,
   "messages_gardes_apres_compression": 20,
+  "seuil_evolution": 45,
   "max_tokens_reponse": 1200
 }
