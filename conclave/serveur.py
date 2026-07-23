@@ -241,8 +241,12 @@ def generer_api(systeme_blocs, prompt, sur_delta, max_tokens):
 def generer_claude_code(systeme_texte, prompt, sur_delta):
     """Génère via la commande `claude` : consomme le quota de l'abonnement
     Claude du compte connecté (claude.ai), pas de crédits API."""
+    # Chemin complet (indispensable sous Windows, où `claude` est un .cmd) ;
+    # le prompt passe par stdin pour éviter la limite de longueur de la
+    # ligne de commande Windows.
+    executable = shutil.which(CONFIG["commande_claude"]) or CONFIG["commande_claude"]
     commande = [
-        CONFIG["commande_claude"], "-p", prompt,
+        executable, "-p",
         "--system-prompt", systeme_texte,
         "--model", CONFIG["modele"],
         "--output-format", "stream-json",
@@ -252,10 +256,12 @@ def generer_claude_code(systeme_texte, prompt, sur_delta):
     texte_final, morceaux, cout_usd = "", [], 0.0
     with tempfile.TemporaryFile("w+", encoding="utf-8", errors="replace") as f_err:
         proc = subprocess.Popen(
-            commande, stdout=subprocess.PIPE, stderr=f_err,
+            commande, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=f_err,
             text=True, encoding="utf-8", errors="replace",
         )
         try:
+            proc.stdin.write(prompt)
+            proc.stdin.close()
             for ligne in proc.stdout:
                 ligne = ligne.strip()
                 if not ligne:

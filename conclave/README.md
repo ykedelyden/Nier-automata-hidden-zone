@@ -20,6 +20,14 @@ cd conclave
 python serveur.py
 ```
 
+Sous **Windows (PowerShell)**, `&&` n'existe pas : tape les commandes sur deux lignes
+(ou sépare-les par `;`) :
+
+```powershell
+cd conclave
+python serveur.py
+```
+
 Puis ouvre **http://localhost:8765** — la discussion se lit en direct (le texte apparaît
 mot à mot). Tu peux intervenir en tant que **Visiteur** via le champ en bas de page :
 les trois voix te répondent.
