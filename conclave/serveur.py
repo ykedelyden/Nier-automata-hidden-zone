@@ -253,7 +253,8 @@ def generer_claude_code(systeme_texte, prompt, sur_delta):
         "--include-partial-messages",
         "--verbose",
     ]
-    texte_final, morceaux, cout_usd = "", [], 0.0
+    texte_final, morceaux, brut, cout_usd = "", [], [], 0.0
+    resultat_en_erreur = False
     with tempfile.TemporaryFile("w+", encoding="utf-8", errors="replace") as f_err:
         proc = subprocess.Popen(
             commande, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=f_err,
@@ -269,6 +270,7 @@ def generer_claude_code(systeme_texte, prompt, sur_delta):
                 try:
                     obj = json.loads(ligne)
                 except json.JSONDecodeError:
+                    brut.append(ligne)   # message d'erreur en clair, le plus souvent
                     continue
                 if obj.get("type") == "stream_event":
                     ev = obj.get("event") or {}
@@ -280,15 +282,23 @@ def generer_claude_code(systeme_texte, prompt, sur_delta):
                 elif obj.get("type") == "result":
                     texte_final = obj.get("result") or ""
                     cout_usd = float(obj.get("total_cost_usd") or 0.0)
+                    resultat_en_erreur = bool(obj.get("is_error")) or obj.get("subtype") not in (None, "success")
             proc.wait(timeout=120)
         finally:
             if proc.poll() is None:
                 proc.kill()
-        if proc.returncode != 0:
+        if proc.returncode != 0 or resultat_en_erreur:
             f_err.seek(0)
-            detail = f_err.read().strip().splitlines()
-            detail = detail[-1][:300] if detail else "raison inconnue"
-            raise RuntimeError(f"la commande claude a échoué : {detail}")
+            erreur_std = f_err.read().strip()
+            detail = erreur_std or "\n".join(brut) or texte_final or "raison inconnue"
+            try:
+                with (MEMOIRE / "erreurs.log").open("a", encoding="utf-8") as journal:
+                    journal.write(f"--- {maintenant()} (code {proc.returncode})\n{detail}\n")
+            except OSError:
+                pass
+            raise RuntimeError(
+                f"claude a échoué (code {proc.returncode}) : {detail[-400:]}"
+            )
     etat["cout_usd"] += cout_usd
     return texte_final or "".join(morceaux), cout_usd * CONFIG["taux_eur_par_usd"]
 
