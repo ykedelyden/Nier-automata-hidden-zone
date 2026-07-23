@@ -1,0 +1,12 @@
+{
+  "modele": "claude-opus-4-8",
+  "port": 8765,
+  "budget_max_eur": 75.0,
+  "taux_eur_par_usd": 0.92,
+  "pause_entre_tours_secondes": [25, 55],
+  "probabilite_double_voix": 0.15,
+  "fenetre_dialogue": 40,
+  "seuil_compression": 60,
+  "messages_gardes_apres_compression": 20,
+  "max_tokens_reponse": 1200
+}
