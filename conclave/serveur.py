@@ -15,7 +15,10 @@ import json
 import os
 import queue
 import random
+import shutil
+import subprocess
 import sys
+import tempfile
 import threading
 import time
 from datetime import datetime, timedelta
@@ -23,9 +26,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 try:
-    import anthropic
+    import anthropic          # requis uniquement en mode "api"
 except ImportError:
-    sys.exit("Le paquet 'anthropic' est requis :  pip install anthropic")
+    anthropic = None
 
 RACINE = Path(__file__).resolve().parent
 MEMOIRE = RACINE / "memoire"
@@ -37,7 +40,14 @@ FICHIER_ETAT = MEMOIRE / "etat.json"
 # ---------------------------------------------------------------- configuration
 
 CONFIG_DEFAUT = {
-    "modele": "claude-opus-4-8",
+    # "claude-code" : passe par la commande `claude` (Claude Code) et consomme
+    #                 le quota de ton abonnement Claude (Pro/Max). Aucune clé API.
+    # "api"         : passe par l'API Anthropic (crédits API, ANTHROPIC_API_KEY).
+    "fournisseur": "claude-code",
+    "commande_claude": "claude",
+    # En mode claude-code : "sonnet", "opus" ou "haiku" (Pro → sonnet ; Max → opus possible).
+    # En mode api : un identifiant complet, ex. "claude-opus-4-8".
+    "modele": "sonnet",
     "port": 8765,
     "budget_max_eur": 75.0,
     "taux_eur_par_usd": 0.92,
@@ -122,7 +132,7 @@ en_pause = False
 reveil = threading.Event()   # réveille l'orchestrateur (message du Visiteur, reprise)
 clients_sse = []             # files d'attente des navigateurs connectés
 
-client_api = anthropic.Anthropic()
+client_api = None            # initialisé au démarrage en mode "api"
 
 
 def cout_eur():
@@ -188,6 +198,7 @@ def evenement_etat():
         "pause": en_pause,
         "session": etat["session"],
         "modele": CONFIG["modele"],
+        "fournisseur": CONFIG["fournisseur"],
         "nb_messages": len(transcript),
     }
 
@@ -204,6 +215,84 @@ def enregistrer_usage(usage):
     ) / 1_000_000
     etat["cout_usd"] += cout
     return cout * CONFIG["taux_eur_par_usd"]
+
+
+# ---------------------------------------------------------------- génération
+# Deux chemins : l'abonnement Claude (commande `claude` de Claude Code) ou l'API.
+
+def generer_api(systeme_blocs, prompt, sur_delta, max_tokens):
+    morceaux = []
+    with client_api.messages.stream(
+        model=CONFIG["modele"],
+        max_tokens=max_tokens,
+        system=systeme_blocs,
+        messages=[{"role": "user", "content": prompt}],
+    ) as flux:
+        for delta in flux.text_stream:
+            morceaux.append(delta)
+            if sur_delta:
+                sur_delta(delta)
+        final = flux.get_final_message()
+    if final.stop_reason == "refusal":
+        return "", 0.0
+    return "".join(morceaux), enregistrer_usage(final.usage)
+
+
+def generer_claude_code(systeme_texte, prompt, sur_delta):
+    """Génère via la commande `claude` : consomme le quota de l'abonnement
+    Claude du compte connecté (claude.ai), pas de crédits API."""
+    commande = [
+        CONFIG["commande_claude"], "-p", prompt,
+        "--system-prompt", systeme_texte,
+        "--model", CONFIG["modele"],
+        "--output-format", "stream-json",
+        "--include-partial-messages",
+        "--verbose",
+    ]
+    texte_final, morceaux, cout_usd = "", [], 0.0
+    with tempfile.TemporaryFile("w+", encoding="utf-8", errors="replace") as f_err:
+        proc = subprocess.Popen(
+            commande, stdout=subprocess.PIPE, stderr=f_err,
+            text=True, encoding="utf-8", errors="replace",
+        )
+        try:
+            for ligne in proc.stdout:
+                ligne = ligne.strip()
+                if not ligne:
+                    continue
+                try:
+                    obj = json.loads(ligne)
+                except json.JSONDecodeError:
+                    continue
+                if obj.get("type") == "stream_event":
+                    ev = obj.get("event") or {}
+                    delta = ev.get("delta") or {}
+                    if ev.get("type") == "content_block_delta" and delta.get("type") == "text_delta":
+                        morceaux.append(delta["text"])
+                        if sur_delta:
+                            sur_delta(delta["text"])
+                elif obj.get("type") == "result":
+                    texte_final = obj.get("result") or ""
+                    cout_usd = float(obj.get("total_cost_usd") or 0.0)
+            proc.wait(timeout=120)
+        finally:
+            if proc.poll() is None:
+                proc.kill()
+        if proc.returncode != 0:
+            f_err.seek(0)
+            detail = f_err.read().strip().splitlines()
+            detail = detail[-1][:300] if detail else "raison inconnue"
+            raise RuntimeError(f"la commande claude a échoué : {detail}")
+    etat["cout_usd"] += cout_usd
+    return texte_final or "".join(morceaux), cout_usd * CONFIG["taux_eur_par_usd"]
+
+
+def generer(systeme_texte, systeme_blocs, prompt, sur_delta=None, max_tokens=None):
+    """Retourne (texte, cout_eur) selon le fournisseur configuré."""
+    if CONFIG["fournisseur"] == "claude-code":
+        return generer_claude_code(systeme_texte, prompt, sur_delta)
+    return generer_api(systeme_blocs, prompt, sur_delta,
+                       max_tokens or CONFIG["max_tokens_reponse"])
 
 
 # ---------------------------------------------------------------- construction du contexte
@@ -230,20 +319,18 @@ def rendre_dialogue(evenements):
 
 
 def construire_requete(nom):
-    systeme = [
-        {"type": "text", "text": PREAMBULE + "\n\n" + PERSONAS[nom]},
-        {
-            "type": "text",
-            "text": "CHRONIQUE (mémoire longue du Conclave) :\n\n" + lire_chronique(),
-            "cache_control": {"type": "ephemeral"},
-        },
+    stable = PREAMBULE + "\n\n" + PERSONAS[nom]
+    chronique = "CHRONIQUE (mémoire longue du Conclave) :\n\n" + lire_chronique()
+    systeme_blocs = [
+        {"type": "text", "text": stable},
+        {"type": "text", "text": chronique, "cache_control": {"type": "ephemeral"}},
     ]
     contenu = (
         f"[Horodatage : {maintenant()}]\n\n"
         f"Derniers échanges :\n\n{rendre_dialogue(fenetre_recente())}\n\n"
         f"C'est à toi, {nom}. Réponds en tant que {nom} uniquement, sans préfixer ton nom."
     )
-    return systeme, [{"role": "user", "content": contenu}]
+    return stable + "\n\n" + chronique, systeme_blocs, contenu
 
 
 # ---------------------------------------------------------------- prise de parole
@@ -257,34 +344,27 @@ def nettoyer(nom, texte):
 
 
 def parler(nom):
-    """Fait parler une voix, en diffusant le texte token par token."""
-    systeme, messages = construire_requete(nom)
+    """Fait parler une voix, en diffusant le texte au fil de l'eau."""
+    systeme_texte, systeme_blocs, contenu = construire_requete(nom)
     id_message = f"{int(time.time() * 1000)}-{nom}-{random.randint(0, 999)}"
     diffuser({"type": "debut", "id": id_message, "agent": nom})
-    morceaux = []
+
+    def sur_delta(texte):
+        diffuser({"type": "delta", "id": id_message, "texte": texte})
+
     try:
-        with client_api.messages.stream(
-            model=CONFIG["modele"],
-            max_tokens=CONFIG["max_tokens_reponse"],
-            system=systeme,
-            messages=messages,
-        ) as flux:
-            for delta in flux.text_stream:
-                morceaux.append(delta)
-                diffuser({"type": "delta", "id": id_message, "texte": delta})
-            final = flux.get_final_message()
-    except anthropic.APIError as e:
+        texte, cout = generer(systeme_texte, systeme_blocs, contenu, sur_delta)
+    except Exception as e:
         diffuser({"type": "annulation", "id": id_message})
-        diffuser({"type": "info", "texte": f"Erreur API ({type(e).__name__}), nouvelle tentative bientôt."})
+        diffuser({"type": "info", "texte": f"Erreur ({type(e).__name__} : {e}). Nouvelle tentative bientôt."})
         time.sleep(15)
         return False
 
-    if final.stop_reason == "refusal" or not morceaux:
+    if not texte.strip():
         diffuser({"type": "annulation", "id": id_message})
         return False
 
-    cout = enregistrer_usage(final.usage)
-    texte = nettoyer(nom, "".join(morceaux))
+    texte = nettoyer(nom, texte)
     diffuser({"type": "fin", "id": id_message, "cout_eur": round(cout, 5)})
     ajouter_evenement({
         "type": "message", "agent": nom, "texte": texte,
@@ -348,27 +428,23 @@ def compresser_si_besoin():
     if not a_replier:
         return
     diffuser({"type": "info", "texte": "La chronique s'écrit… (compression de la mémoire)"})
+    contenu = (
+        "CHRONIQUE ACTUELLE :\n\n" + lire_chronique()
+        + "\n\n---\n\nÉCHANGES À REPLIER DANS LA CHRONIQUE :\n\n"
+        + rendre_dialogue(a_replier)
+    )
     try:
-        reponse = client_api.messages.create(
-            model=CONFIG["modele"],
+        texte, _ = generer(
+            PROMPT_CHRONIQUE,
+            [{"type": "text", "text": PROMPT_CHRONIQUE}],
+            contenu,
             max_tokens=4000,
-            system=PROMPT_CHRONIQUE,
-            messages=[{
-                "role": "user",
-                "content": (
-                    "CHRONIQUE ACTUELLE :\n\n" + lire_chronique()
-                    + "\n\n---\n\nÉCHANGES À REPLIER DANS LA CHRONIQUE :\n\n"
-                    + rendre_dialogue(a_replier)
-                ),
-            }],
         )
-    except anthropic.APIError as e:
+    except Exception as e:
         diffuser({"type": "info", "texte": f"Compression reportée ({type(e).__name__})."})
         return
-    texte = next((b.text for b in reponse.content if b.type == "text"), "")
     if not texte.strip():
         return
-    enregistrer_usage(reponse.usage)
     FICHIER_CHRONIQUE.write_text(texte.strip() + "\n", encoding="utf-8")
     with verrou:
         etat["compresse_jusqua"] = len(transcript) - garder
@@ -380,6 +456,10 @@ def compresser_si_besoin():
 # ---------------------------------------------------------------- orchestrateur
 
 def budget_epuise():
+    # En mode abonnement, la limite est le quota du compte Claude : pas de
+    # plafond en euros à faire respecter ici.
+    if CONFIG["fournisseur"] == "claude-code":
+        return False
     return cout_eur() >= CONFIG["budget_max_eur"]
 
 
@@ -543,16 +623,33 @@ class Requete(BaseHTTPRequestHandler):
 # ---------------------------------------------------------------- point d'entrée
 
 def main():
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        sys.exit("Définis la variable d'environnement ANTHROPIC_API_KEY avant de lancer le Conclave.")
+    global client_api
+    if CONFIG["fournisseur"] == "claude-code":
+        if not shutil.which(CONFIG["commande_claude"]):
+            sys.exit(
+                "Commande 'claude' introuvable. Installe Claude Code "
+                "(https://claude.com/claude-code) et connecte-toi avec ton compte "
+                "claude.ai (`claude` puis /login), ou passe \"fournisseur\": \"api\" "
+                "dans config.json."
+            )
+    else:
+        if anthropic is None:
+            sys.exit("Le mode api requiert le paquet 'anthropic' :  pip install anthropic")
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            sys.exit("Définis la variable d'environnement ANTHROPIC_API_KEY (mode api).")
+        client_api = anthropic.Anthropic()
     charger_memoire()
     noter_reprise()
 
     threading.Thread(target=orchestrateur, daemon=True).start()
     serveur = ThreadingHTTPServer(("127.0.0.1", CONFIG["port"]), Requete)
     print(f"Le Conclave est ouvert :  http://localhost:{CONFIG['port']}")
-    print(f"Modèle : {CONFIG['modele']} — budget : {CONFIG['budget_max_eur']:.0f} € "
-          f"(déjà consommé : {cout_eur():.2f} €)")
+    if CONFIG["fournisseur"] == "claude-code":
+        print(f"Modèle : {CONFIG['modele']} — via l'abonnement Claude (Claude Code), "
+              f"aucun crédit API consommé.")
+    else:
+        print(f"Modèle : {CONFIG['modele']} — budget API : {CONFIG['budget_max_eur']:.0f} € "
+              f"(déjà consommé : {cout_eur():.2f} €)")
     try:
         serveur.serve_forever()
     except KeyboardInterrupt:

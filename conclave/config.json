@@ -1,5 +1,7 @@
 {
-  "modele": "claude-opus-4-8",
+  "fournisseur": "claude-code",
+  "commande_claude": "claude",
+  "modele": "sonnet",
   "port": 8765,
   "budget_max_eur": 75.0,
   "taux_eur_par_usd": 0.92,

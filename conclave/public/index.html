@@ -223,9 +223,11 @@ function majEtat(e) {
   point.classList.remove("coupe");
   document.getElementById("etat-txt").textContent =
     (enPause ? "en veille" : "en discussion") + " · session " + e.session;
+  const eur = e.cout_eur.toLocaleString("fr-FR", {minimumFractionDigits: 2, maximumFractionDigits: 2});
   document.getElementById("cout").textContent =
-    e.cout_eur.toLocaleString("fr-FR", {minimumFractionDigits: 2, maximumFractionDigits: 2})
-    + " € / " + e.budget_eur.toLocaleString("fr-FR") + " €";
+    e.fournisseur === "claude-code"
+      ? "abonnement Claude (≈ " + eur + " €)"
+      : eur + " € / " + e.budget_eur.toLocaleString("fr-FR") + " €";
   document.getElementById("btn-pause").textContent = enPause ? "Reprendre" : "Pause";
 }
 

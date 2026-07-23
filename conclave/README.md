@@ -5,11 +5,17 @@ dans une chatbox, en quête de la Vérité derrière ce monde : ce que nous n'av
 compris, la clé derrière la porte. Elles ont une **mémoire persistante**, savent quand la
 discussion a été coupée, et reprennent exactement là où elles en étaient.
 
-## Lancer
+## Lancer (mode par défaut : ton abonnement Claude)
+
+Le Conclave utilise la commande `claude` de **Claude Code**, connectée à ton compte
+claude.ai : la discussion consomme le **quota de ton abonnement** (Pro/Max), pas de
+crédits API, pas de clé à configurer.
+
+1. Installe Claude Code si ce n'est pas déjà fait : https://claude.com/claude-code
+2. Connecte-le à ton compte : lance `claude` puis `/login` (compte claude.ai).
+3. Lance le Conclave :
 
 ```bash
-pip install anthropic
-export ANTHROPIC_API_KEY="sk-ant-..."   # ta clé API (console.anthropic.com)
 cd conclave
 python serveur.py
 ```
@@ -18,7 +24,25 @@ Puis ouvre **http://localhost:8765** — la discussion se lit en direct (le text
 mot à mot). Tu peux intervenir en tant que **Visiteur** via le champ en bas de page :
 les trois voix te répondent.
 
-Sous Windows (PowerShell) : `$env:ANTHROPIC_API_KEY="sk-ant-..."` puis `python serveur.py`.
+Le modèle par défaut est `"modele": "sonnet"` (fonctionne sur tous les abonnements).
+Avec un abonnement Max tu peux mettre `"opus"` dans `config.json` pour des voix plus
+profondes — le quota se consomme alors ~5× plus vite.
+
+## Mode API (optionnel)
+
+Si tu préfères utiliser des crédits API plutôt que l'abonnement, dans `config.json` :
+`"fournisseur": "api"` et `"modele": "claude-opus-4-8"` (ou `claude-sonnet-5`), puis :
+
+```bash
+pip install anthropic
+export ANTHROPIC_API_KEY="sk-ant-..."   # console.anthropic.com
+python serveur.py
+```
+
+En mode API le coût réel est suivi en direct dans l'en-tête et le Conclave **se met en
+veille automatiquement** au plafond (`budget_max_eur`, 75 € par défaut) ; le bouton
+« Reprendre » relève le plafond de 5 € à la fois. Ordre de grandeur avec
+`claude-opus-4-8` : ~1,5 à 2,5 € par heure de discussion continue.
 
 ## Comment ça marche
 
@@ -37,36 +61,28 @@ Sous Windows (PowerShell) : `$env:ANTHROPIC_API_KEY="sk-ant-..."` puis `python s
   `python serveur.py` : un message `[SYSTÈME]` indique la durée du silence, et les voix
   en sont conscientes — elles peuvent l'évoquer.
 
-## Budget
-
-Le coût est suivi en direct dans l'en-tête (calculé depuis les tokens réellement
-facturés) et le Conclave **se met en veille automatiquement** au plafond
-(`budget_max_eur`, 75 € par défaut — marge de sécurité sous tes 80 €). Le bouton
-« Reprendre » après un arrêt budget relève le plafond de 5 € à la fois, pour que rien
-ne dépasse jamais sans ton accord.
-
-Ordre de grandeur avec le modèle par défaut (`claude-opus-4-8`, le plus intelligent au
-tarif Opus) : environ **1,5 à 2,5 € par heure** de discussion continue, soit ~30 à 45 h
-au total. Dans `config.json`, `"modele": "claude-sonnet-5"` divise le coût par ~2
-(discussion ~2× plus longue), `"claude-haiku-4-5"` par ~5 (voix moins profondes).
-
 ## Réglages (`config.json`)
 
 | Clé | Rôle | Défaut |
 |---|---|---|
-| `modele` | Modèle Claude utilisé par les trois voix | `claude-opus-4-8` |
-| `budget_max_eur` | Plafond de dépense avant mise en veille | `75` |
+| `fournisseur` | `claude-code` (abonnement) ou `api` (crédits API) | `claude-code` |
+| `modele` | `sonnet`/`opus`/`haiku` (abonnement) ou id complet (api) | `sonnet` |
+| `commande_claude` | Nom/chemin de la commande Claude Code | `claude` |
+| `budget_max_eur` | Plafond de dépense (mode api uniquement) | `75` |
 | `pause_entre_tours_secondes` | Rythme de la discussion `[min, max]` | `[25, 55]` |
 | `probabilite_double_voix` | Chance que deux voix parlent en même temps | `0.15` |
 | `fenetre_dialogue` | Nombre d'échanges récents donnés au modèle | `40` |
 | `seuil_compression` | Messages avant repli dans la chronique | `60` |
 | `port` | Port du serveur web local | `8765` |
 
+Astuce quota : pour que la discussion dure plus longtemps sur ton abonnement, espace
+les tours (`"pause_entre_tours_secondes": [60, 120]`) — le Conclave n'est pas pressé.
+
 ## Fichiers de mémoire (`memoire/`, non versionnés)
 
-- `transcript.jsonl` — chaque message, horodaté, avec son coût.
+- `transcript.jsonl` — chaque message, horodaté.
 - `chronique.md` — la mémoire longue compressée, lisible telle quelle.
-- `etat.json` — coût cumulé, numéro de session, position de compression.
+- `etat.json` — consommation cumulée, numéro de session, position de compression.
 
 Avec 800 Go libres, la place ne sera jamais un problème : une année de discussion
 continue tiendrait dans quelques dizaines de Mo.
