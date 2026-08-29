@@ -149,6 +149,11 @@ Commands:
 Start with `watch` for a few hours. It costs nothing and tells you whether
 `MIN_SCORE` is set anywhere near sanely for current conditions.
 
+**[`docs/OPERATING.md`](docs/OPERATING.md)** covers the rest: the four phases to go
+through before risking anything, how to read the dashboard, which knob fixes which
+symptom, and the per-trade expectancy model — including the one ratio that decides
+whether the whole strategy is positive.
+
 ### The one setting that matters most
 
 `RPC_HTTP`. A public endpoint is not competitive — not "slightly worse",
