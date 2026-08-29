@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.env
+*.log
+# runtime state (position book, creator reputation) — created on first run
+state/
